@@ -1,4 +1,6 @@
-﻿using Entities.Concrete;
+﻿using Core.DataAccess;
+using Entities.Concrete;
+using Entities.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,6 +17,9 @@ namespace DataAccess.Abstract
         //void Update(Product product);
         //void Delete(Product product);
         //List<Product> GelAllByCategory(int categoryId);
+        List<ProductDetailDto> GetProductDetails();
 
     }
 }
+
+// Code Refactoring
