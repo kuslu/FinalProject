@@ -1,4 +1,6 @@
 ﻿using Business.Abstract;
+using Business.Constants;
+using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.DTOs;
@@ -17,25 +19,54 @@ namespace Business.Concrete
             _productDal = productDal;
         }
 
-        public List<Product> GetAll()
+        public IResult Add(Product product)
+        {
+            //burada çok katmanlı mimari gereği iş kodları yer alır
+            // kontroller felan yer alır
+            if (product.ProductName.Length<2)
+            {
+                //"Ürün İsmi Geçersizdir" => magic string = başıboş stringler. bunu için Bussiness'ta Constatns klasörü oluşturuldu
+                //ve orada bu tür sabit mesajlar için değişkenler tanımlandı
+                return new ErrorResult(Messages.ProductNameInvalid);
+            }
+
+            _productDal.Add(product);
+            return new SuccessResult(Messages.ProductAdded);
+        }
+
+        public IDataResult<List<Product>> GetAll()
         {
             //İş Kodları buraya yazılacak
-            return _productDal.GelAll();
+            if (DateTime.Now.Hour==22)
+            {
+                return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
+            }
+            return new SuccessDataResult<List<Product>>(_productDal.GelAll(),Messages.ProductsListed);
         }
 
-        public List<Product> GetAllByCategoryId(int id)
+        public IDataResult<List<Product>> GetAllByCategoryId(int id)
         {
-            return _productDal.GelAll(p => p.CategoryID == id);
+            return new SuccessDataResult<List<Product>>(_productDal.GelAll(p => p.CategoryID == id));
         }
 
-        public List<Product> GetByUnitPrice(decimal min, decimal max)
+        public IDataResult<Product> GetById(int productId)
         {
-            return _productDal.GelAll(p => p.UnitPrice>=min && p.UnitPrice<=max);
+            return new SuccessDataResult<Product>(_productDal.Get(p => p.ProductID == productId));
+        }
+
+        public IDataResult<List<Product>> GetByUnitPrice(decimal min, decimal max)
+        {
+            return new SuccessDataResult<List<Product>>(_productDal.GelAll(p => p.UnitPrice>=min && p.UnitPrice<=max));
         }
        
-        public List<ProductDetailDto> GetProductDetails()
+        public IDataResult<List<ProductDetailDto>> GetProductDetails()
         {
-            return _productDal.GetProductDetails();
+            if (DateTime.Now.Hour == 00) //Örnek bir kontrol:Mesela gece 00'da sistem bakıma alınıyor...
+            {
+                return new ErrorDataResult<List<ProductDetailDto>>(Messages.MaintenanceTime);
+            }
+
+            return new SuccessDataResult<List<ProductDetailDto>>(_productDal.GetProductDetails());
         }
     }
 }
